@@ -13,6 +13,11 @@ public class CatKnightController : MonoBehaviour
     public Animator animator;
     public SpriteRenderer spriteRenderer;
 
+    [Header("Ground Check")]
+    public LayerMask groundLayer;
+    public float groundCheckDistance = 0.1f;
+    private bool isGrounded;
+
     // Animation Parameters
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
     private static readonly int AttackHash = Animator.StringToHash("Attack");
@@ -41,9 +46,10 @@ public class CatKnightController : MonoBehaviour
             Debug.Log("CatKnight: Got sprite renderer component");
         }
 
-        // Setup rigidbody
-        rb.gravityScale = 0;
+        // Setup rigidbody for platformer physics
+        rb.gravityScale = 3f; // Adjust this value to control fall speed
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
         // Verify animator parameters exist
         foreach (AnimatorControllerParameter param in animator.parameters)
@@ -54,9 +60,16 @@ public class CatKnightController : MonoBehaviour
 
     void Update()
     {
-        // Get input from the D-pad
+        // Get input from the D-pad (only use horizontal movement now)
         movement.x = SimpleInput.GetAxis("Horizontal");
-        movement.y = SimpleInput.GetAxis("Vertical");
+        movement.y = 0; // Ignore vertical input since we're using gravity
+
+        // Check if we're grounded
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, groundLayer);
+        isGrounded = hit.collider != null;
+
+        // Optional: Debug visualization of ground check
+        Debug.DrawRay(transform.position, Vector2.down * groundCheckDistance, isGrounded ? Color.green : Color.red);
 
         // Handle attack cooldown
         if (!canAttack)
@@ -76,14 +89,20 @@ public class CatKnightController : MonoBehaviour
 
     void FixedUpdate()
     {
-        // Only move if not attacking
+        // Only move horizontally if not attacking
         if (!isAttacking)
         {
-            rb.velocity = movement * moveSpeed;
+            // Preserve vertical velocity (gravity) while changing horizontal velocity
+            Vector2 newVelocity = rb.velocity;
+            newVelocity.x = movement.x * moveSpeed;
+            rb.velocity = newVelocity;
         }
         else
         {
-            rb.velocity = Vector2.zero; // Stop movement during attack
+            // When attacking, only stop horizontal movement
+            Vector2 newVelocity = rb.velocity;
+            newVelocity.x = 0;
+            rb.velocity = newVelocity;
         }
     }
 
@@ -95,7 +114,6 @@ public class CatKnightController : MonoBehaviour
             // Calculate movement speed for animation
             float speed = movement.magnitude;
             animator.SetFloat(SpeedHash, speed);
-            Debug.Log($"CatKnight: Setting Speed parameter to {speed}");
 
             // Update facing direction based on movement
             if (movement.x != 0)
