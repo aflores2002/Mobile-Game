@@ -26,7 +26,7 @@ public class CatKnightController : MonoBehaviour
     private Rigidbody2D rb;
     private bool canAttack = true;
     private float attackTimer;
-    private Vector2 movement;
+    private float horizontalMovement;
     private bool isAttacking = false;
 
     void Start()
@@ -47,11 +47,11 @@ public class CatKnightController : MonoBehaviour
         }
 
         // Setup rigidbody for platformer physics
-        rb.gravityScale = 3f; // Adjust this value to control fall speed
+        rb.gravityScale = 3f;
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
-        // Verify animator parameters exist
+        // Verify animator parameters
         foreach (AnimatorControllerParameter param in animator.parameters)
         {
             Debug.Log($"CatKnight: Found animator parameter: {param.name} of type {param.type}");
@@ -60,15 +60,14 @@ public class CatKnightController : MonoBehaviour
 
     void Update()
     {
-        // Get input from the D-pad (only use horizontal movement now)
-        movement.x = SimpleInput.GetAxis("Horizontal");
-        movement.y = 0; // Ignore vertical input since we're using gravity
+        // Get input from the horizontal joystick
+        horizontalMovement = SimpleInput.GetAxis("Horizontal");
 
         // Check if we're grounded
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, groundLayer);
         isGrounded = hit.collider != null;
 
-        // Optional: Debug visualization of ground check
+        // Debug visualization of ground check
         Debug.DrawRay(transform.position, Vector2.down * groundCheckDistance, isGrounded ? Color.green : Color.red);
 
         // Handle attack cooldown
@@ -92,9 +91,9 @@ public class CatKnightController : MonoBehaviour
         // Only move horizontally if not attacking
         if (!isAttacking)
         {
-            // Preserve vertical velocity (gravity) while changing horizontal velocity
+            // Preserve vertical velocity while changing horizontal velocity
             Vector2 newVelocity = rb.velocity;
-            newVelocity.x = movement.x * moveSpeed;
+            newVelocity.x = horizontalMovement * moveSpeed;
             rb.velocity = newVelocity;
         }
         else
@@ -111,14 +110,14 @@ public class CatKnightController : MonoBehaviour
         // Only update movement animations if not attacking
         if (!isAttacking)
         {
-            // Calculate movement speed for animation
-            float speed = movement.magnitude;
+            // Calculate movement speed for animation using absolute horizontal movement
+            float speed = Mathf.Abs(horizontalMovement);
             animator.SetFloat(SpeedHash, speed);
 
             // Update facing direction based on movement
-            if (movement.x != 0)
+            if (horizontalMovement != 0)
             {
-                spriteRenderer.flipX = movement.x < 0;
+                spriteRenderer.flipX = horizontalMovement < 0;
             }
         }
     }
@@ -126,19 +125,10 @@ public class CatKnightController : MonoBehaviour
     public void OnAttackInput()
     {
         Debug.Log("CatKnight: OnAttackInput called");
-        Debug.Log($"CatKnight: canAttack={canAttack}, isAttacking={isAttacking}");
-
         if (canAttack && !isAttacking)
         {
             Debug.Log("CatKnight: Starting attack");
             StartAttack();
-        }
-        else
-        {
-            if (!canAttack)
-                Debug.Log("CatKnight: Can't attack - on cooldown");
-            if (isAttacking)
-                Debug.Log("CatKnight: Can't attack - already attacking");
         }
     }
 
@@ -148,18 +138,21 @@ public class CatKnightController : MonoBehaviour
         isAttacking = true;
         Debug.Log("CatKnight: Setting Attack trigger");
         animator.SetTrigger(AttackHash);
-        rb.velocity = Vector2.zero;
+
+        // When attacking, only stop horizontal movement
+        Vector2 newVelocity = rb.velocity;
+        newVelocity.x = 0;
+        rb.velocity = newVelocity;
 
         // Add a safety timeout to reset attack state
         Invoke("ForceAttackReset", 1.0f);
     }
 
-    // Called by Animation Event at the end of attack animation
     public void OnAttackComplete()
     {
         Debug.Log("CatKnight: OnAttackComplete called");
         isAttacking = false;
-        CancelInvoke("ForceAttackReset"); // Cancel the safety timeout since we completed normally
+        CancelInvoke("ForceAttackReset");
     }
 
     private void ForceAttackReset()
