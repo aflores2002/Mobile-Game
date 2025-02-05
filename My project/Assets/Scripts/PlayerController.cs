@@ -9,6 +9,7 @@ public class CatKnightController : MonoBehaviour
 
     [Header("Combat")]
     public float attackCooldown = 0.5f;
+    private AttackManager attackManager;
 
     [Header("References")]
     public Animator animator;
@@ -51,6 +52,12 @@ public class CatKnightController : MonoBehaviour
         rb.gravityScale = originalGravityScale;
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+
+        attackManager = GetComponent<AttackManager>();
+        if (attackManager == null)
+        {
+            Debug.LogError("AttackManager component missing!");
+        }
     }
 
     void Update()
@@ -151,7 +158,8 @@ public class CatKnightController : MonoBehaviour
         animator.Update(0f);
         animator.SetTrigger(AttackHash);
 
-        Debug.Log("CatKnight: Attack animation triggered");
+        // Execute the attack
+        attackManager.ExecuteNormalAttack();
 
         // Freeze position and disable gravity while preserving facing direction
         float currentXVelocity = rb.velocity.x;
