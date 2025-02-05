@@ -807,6 +807,68 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 22, y: 6.54}
   m_EdgeRadius: 0
+--- !u!1 &1157413137
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1157413138}
+  - component: {fileID: 1157413139}
+  m_Layer: 0
+  m_Name: SwipeDetector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1157413138
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1157413137}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 234.58986, y: -68.15718, z: -268.9575}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1157413139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1157413137}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41da89918ac984cf5bc2ea83595a75c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  minSwipeDistance: 50
+  maxSwipeTime: 0.5
+  minVerticalRatio: 0.7
+  onUpwardSwipe:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 2062987811}
+        m_TargetAssemblyTypeName: CatKnightController, Assembly-CSharp
+        m_MethodName: OnJumpInput
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1245983556
 GameObject:
   m_ObjectHideFlags: 0
@@ -1016,13 +1078,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 5
+  jumpForce: 20
   attackCooldown: 0.5
   animator: {fileID: 2062987816}
   spriteRenderer: {fileID: 2062987812}
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 0
-  groundCheckDistance: 0.1
 --- !u!212 &2062987812
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1435,6 +1494,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: DarkGround03
       objectReference: {fileID: 0}
+    - target: {fileID: 3487457112221730619, guid: 68d5d1ba062f846978cb83c9a085a2b4,
+        type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 3487457113594308647, guid: 68d5d1ba062f846978cb83c9a085a2b4,
+        type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 3487457113704322576, guid: 68d5d1ba062f846978cb83c9a085a2b4,
         type: 3}
       propertyPath: m_LocalScale.x
@@ -1449,6 +1518,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Size.y
       value: 7.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3487457113704322583, guid: 68d5d1ba062f846978cb83c9a085a2b4,
+        type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1633,3 +1707,4 @@ SceneRoots:
   - {fileID: 848642907}
   - {fileID: 1245983559}
   - {fileID: 843259271}
+  - {fileID: 1157413138}

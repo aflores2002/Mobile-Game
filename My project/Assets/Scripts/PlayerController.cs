@@ -5,6 +5,7 @@ public class CatKnightController : MonoBehaviour
 {
     [Header("Movement")]
     public float moveSpeed = 5f;
+    public float jumpForce = 12f;
 
     [Header("Combat")]
     public float attackCooldown = 0.5f;
@@ -13,14 +14,10 @@ public class CatKnightController : MonoBehaviour
     public Animator animator;
     public SpriteRenderer spriteRenderer;
 
-    [Header("Ground Check")]
-    public LayerMask groundLayer;
-    public float groundCheckDistance = 0.1f;
-    private bool isGrounded;
-
     // Animation Parameters
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
     private static readonly int AttackHash = Animator.StringToHash("Attack");
+    private static readonly int JumpHash = Animator.StringToHash("Jump");
 
     // Private fields
     private Rigidbody2D rb;
@@ -50,25 +47,12 @@ public class CatKnightController : MonoBehaviour
         rb.gravityScale = 3f;
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-
-        // Verify animator parameters
-        foreach (AnimatorControllerParameter param in animator.parameters)
-        {
-            Debug.Log($"CatKnight: Found animator parameter: {param.name} of type {param.type}");
-        }
     }
 
     void Update()
     {
         // Get input from the horizontal joystick
         horizontalMovement = SimpleInput.GetAxis("Horizontal");
-
-        // Check if we're grounded
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, groundLayer);
-        isGrounded = hit.collider != null;
-
-        // Debug visualization of ground check
-        Debug.DrawRay(transform.position, Vector2.down * groundCheckDistance, isGrounded ? Color.green : Color.red);
 
         // Handle attack cooldown
         if (!canAttack)
@@ -120,6 +104,25 @@ public class CatKnightController : MonoBehaviour
                 spriteRenderer.flipX = horizontalMovement < 0;
             }
         }
+    }
+
+    public void OnJumpInput()
+    {
+        Debug.Log("CatKnight: Jump input received");
+        if (!isAttacking)
+        {
+            StartJump();
+        }
+    }
+
+    private void StartJump()
+    {
+        animator.SetTrigger(JumpHash);
+
+        // Apply jump force
+        rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+
+        Debug.Log($"CatKnight: Jump started with force {jumpForce}");
     }
 
     public void OnAttackInput()
