@@ -4,6 +4,7 @@ public class AttackManager : MonoBehaviour
 {
     [Header("Attack Settings")]
     public int normalAttackDamage = 100;
+    public int powerAttackDamage = 200;
     public float attackRange = 1.5f;
     public LayerMask enemyLayer;
 
@@ -47,6 +48,12 @@ public class AttackManager : MonoBehaviour
     public void ExecuteNormalAttack()
     {
         PerformAttack(normalAttackDamage);
+    }
+
+    // Call this method to perform a power attack
+    public void ExecutePowerAttack()
+    {
+        PerformAttack(powerAttackDamage);
     }
 
     // Visualization for debug purposes

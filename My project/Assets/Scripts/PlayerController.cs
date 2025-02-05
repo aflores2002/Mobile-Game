@@ -137,16 +137,29 @@ public class CatKnightController : MonoBehaviour
     public void OnAttackInput()
     {
         Debug.Log("CatKnight: OnAttackInput called");
-        if (canAttack)  // Removed !isAttacking check to allow attack chain
+        if (canAttack)
         {
             Debug.Log("CatKnight: Starting attack");
-            StartAttack();
+            StartAttack(false);
         }
     }
 
-    private void StartAttack()
+    public void OnPowerAttackInput()
     {
-        // Set attack states and trigger animation immediately
+        Debug.Log("CatKnight: OnPowerAttackInput called");
+        if (canAttack)
+        {
+            Debug.Log("CatKnight: Starting power attack");
+            StartAttack(true);
+        }
+    }
+
+    [Header("Power Attack")]
+    public float powerAttackSlowdownFactor = 0.3f;
+
+    // Modify existing StartAttack to accept parameter
+    private void StartAttack(bool isPowerAttack = false)
+    {
         canAttack = false;
         isAttacking = true;
 
@@ -159,7 +172,14 @@ public class CatKnightController : MonoBehaviour
         animator.SetTrigger(AttackHash);
 
         // Execute the attack
-        attackManager.ExecuteNormalAttack();
+        if (isPowerAttack)
+        {
+            attackManager.ExecutePowerAttack();
+        }
+        else
+        {
+            attackManager.ExecuteNormalAttack();
+        }
 
         // Freeze position and disable gravity while preserving facing direction
         float currentXVelocity = rb.velocity.x;

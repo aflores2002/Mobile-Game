@@ -8,6 +8,7 @@ public class AttackButton : MonoBehaviour, IPointerDownHandler
     private Image buttonImage;
     private Color normalColor;
     private Color pressedColor;
+    private PowerAttackUI powerAttackUI;  // Reference to power attack component
 
     void Start()
     {
@@ -20,7 +21,13 @@ public class AttackButton : MonoBehaviour, IPointerDownHandler
             Debug.LogError("AttackButton: No CatKnightController found!");
             return;
         }
-        Debug.Log("AttackButton: Successfully found CatKnightController");
+
+        // Find PowerAttackUI
+        powerAttackUI = FindObjectOfType<PowerAttackUI>();
+        if (powerAttackUI == null)
+        {
+            Debug.LogError("AttackButton: No PowerAttackUI found!");
+        }
 
         // Get the button image component
         buttonImage = GetComponent<Image>();
@@ -33,36 +40,29 @@ public class AttackButton : MonoBehaviour, IPointerDownHandler
                 normalColor.b * 0.8f,
                 normalColor.a
             );
-            Debug.Log("AttackButton: Image component initialized");
         }
-    }
-
-    void Awake()
-    {
-        Debug.Log("AttackButton: Awake called");
     }
 
     public void OnPointerDown(PointerEventData eventData)
     {
+        // Don't trigger normal attack if power attack UI is charging
+        if (powerAttackUI != null && powerAttackUI.IsCharging)
+        {
+            return;
+        }
+
         Debug.Log("AttackButton: Button pressed");
-        Debug.Log($"AttackButton: Event position = {eventData.position}");
 
         // Visual feedback
         if (buttonImage != null)
         {
             buttonImage.color = pressedColor;
-            Debug.Log("AttackButton: Changed button color");
         }
 
         // Trigger attack
         if (playerController != null)
         {
-            Debug.Log("AttackButton: Calling OnAttackInput on player controller");
             playerController.OnAttackInput();
-        }
-        else
-        {
-            Debug.LogError("AttackButton: playerController is null when trying to attack!");
         }
 
         // Schedule color reset
@@ -71,10 +71,17 @@ public class AttackButton : MonoBehaviour, IPointerDownHandler
 
     private void ResetButtonColor()
     {
-        if (buttonImage != null)
+        if (buttonImage != null && !powerAttackUI.IsCharging)
         {
             buttonImage.color = normalColor;
-            Debug.Log("AttackButton: Reset button color");
+        }
+    }
+
+    public void ForceButtonColor(Color color)
+    {
+        if (buttonImage != null)
+        {
+            buttonImage.color = color;
         }
     }
 }
