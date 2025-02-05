@@ -25,11 +25,15 @@ public class CatKnightController : MonoBehaviour
     private float attackTimer;
     private float horizontalMovement;
     private bool isAttacking = false;
+    private float originalGravityScale;
 
     void Start()
     {
         Debug.Log("CatKnight: Start initialized");
         rb = GetComponent<Rigidbody2D>();
+
+        // Store original gravity scale
+        originalGravityScale = rb.gravityScale;
 
         // Ensure we have references
         if (animator == null)
@@ -44,7 +48,7 @@ public class CatKnightController : MonoBehaviour
         }
 
         // Setup rigidbody for platformer physics
-        rb.gravityScale = 3f;
+        rb.gravityScale = originalGravityScale;
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
     }
@@ -82,10 +86,8 @@ public class CatKnightController : MonoBehaviour
         }
         else
         {
-            // When attacking, only stop horizontal movement
-            Vector2 newVelocity = rb.velocity;
-            newVelocity.x = 0;
-            rb.velocity = newVelocity;
+            // When attacking, freeze all movement
+            rb.velocity = Vector2.zero;
         }
     }
 
@@ -128,7 +130,7 @@ public class CatKnightController : MonoBehaviour
     public void OnAttackInput()
     {
         Debug.Log("CatKnight: OnAttackInput called");
-        if (canAttack && !isAttacking)
+        if (canAttack)  // Removed !isAttacking check to allow attack chain
         {
             Debug.Log("CatKnight: Starting attack");
             StartAttack();
@@ -137,15 +139,24 @@ public class CatKnightController : MonoBehaviour
 
     private void StartAttack()
     {
+        // Set attack states and trigger animation immediately
         canAttack = false;
         isAttacking = true;
-        Debug.Log("CatKnight: Setting Attack trigger");
+
+        // Reset any current animation states that might interfere
+        animator.ResetTrigger(JumpHash);
+        animator.ResetTrigger(AttackHash);
+
+        // Force immediate animation update
+        animator.Update(0f);
         animator.SetTrigger(AttackHash);
 
-        // When attacking, only stop horizontal movement
-        Vector2 newVelocity = rb.velocity;
-        newVelocity.x = 0;
-        rb.velocity = newVelocity;
+        Debug.Log("CatKnight: Attack animation triggered");
+
+        // Freeze position and disable gravity while preserving facing direction
+        float currentXVelocity = rb.velocity.x;
+        rb.velocity = new Vector2(currentXVelocity * 0.5f, 0f); // Maintain some horizontal momentum
+        rb.gravityScale = 0f;
 
         // Add a safety timeout to reset attack state
         Invoke("ForceAttackReset", 1.0f);
@@ -155,6 +166,8 @@ public class CatKnightController : MonoBehaviour
     {
         Debug.Log("CatKnight: OnAttackComplete called");
         isAttacking = false;
+        // Restore gravity
+        rb.gravityScale = originalGravityScale;
         CancelInvoke("ForceAttackReset");
     }
 
@@ -166,6 +179,8 @@ public class CatKnightController : MonoBehaviour
             isAttacking = false;
             canAttack = true;
             attackTimer = 0;
+            // Restore gravity
+            rb.gravityScale = originalGravityScale;
         }
     }
 }
