@@ -8,7 +8,8 @@ public class MainMenu : MonoBehaviour
     public CanvasGroup menuCanvas;
 
     [Header("Game Objects")]
-    public GameObject gameplayUI; // Reference to the gameplay UI parent
+    public GameObject gameplayUI;        // Combat UI elements
+    public GameObject joystickCanvas;    // Joystick controls
     public GameObject playerObject;
     public EnemySpawner enemySpawner;
 
@@ -26,10 +27,15 @@ public class MainMenu : MonoBehaviour
             menuCanvas = GetComponent<CanvasGroup>();
         }
 
-        // Initially disable gameplay elements
+        // Initially disable all gameplay elements
         if (gameplayUI != null)
         {
             gameplayUI.SetActive(false);
+        }
+
+        if (joystickCanvas != null)
+        {
+            joystickCanvas.SetActive(false);
         }
 
         if (playerObject != null)
@@ -61,9 +67,15 @@ public class MainMenu : MonoBehaviour
                 playerObject.SetActive(true);
             }
 
+            // Enable both UI canvases
             if (gameplayUI != null)
             {
                 gameplayUI.SetActive(true);
+            }
+
+            if (joystickCanvas != null)
+            {
+                joystickCanvas.SetActive(true);
             }
 
             if (enemySpawner != null)

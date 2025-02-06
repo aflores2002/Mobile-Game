@@ -889,6 +889,7 @@ MonoBehaviour:
   startButton: {fileID: 568887295}
   menuCanvas: {fileID: 1855533767}
   gameplayUI: {fileID: 843259267}
+  joystickCanvas: {fileID: 848642903}
   playerObject: {fileID: 2062987810}
   enemySpawner: {fileID: 918287983}
 --- !u!4 &736932972
@@ -2285,10 +2286,14 @@ MonoBehaviour:
   normalAttackDamage: 100
   powerAttackDamage: 200
   attackRange: 7.5
+  attackHeight: 3.32
   enemyLayer:
     serializedVersion: 2
     m_Bits: 256
+  horizontalOffset: 3.78
+  verticalOffset: 1.96
   showAttackRange: 1
+  attackRangeColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!1 &2092886317
 GameObject:
   m_ObjectHideFlags: 0
