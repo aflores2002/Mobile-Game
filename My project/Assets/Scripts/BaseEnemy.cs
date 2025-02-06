@@ -20,7 +20,10 @@ public abstract class BaseEnemy : MonoBehaviour
 
     protected virtual void Start()
     {
+        Debug.Log($"BaseEnemy Start - Initial maxHealth: {maxHealth}");
         currentHealth = maxHealth;
+        Debug.Log($"BaseEnemy Start - Set currentHealth to: {currentHealth}");
+
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer != null)
         {
@@ -30,9 +33,17 @@ public abstract class BaseEnemy : MonoBehaviour
 
     public virtual void TakeDamage(int damage)
     {
-        if (!IsAlive) return;
+        Debug.Log($"BaseEnemy TakeDamage - Before damage: maxHealth={maxHealth}, currentHealth={currentHealth}, damage={damage}");
+
+        if (!IsAlive)
+        {
+            Debug.Log("BaseEnemy TakeDamage - Enemy not alive, returning");
+            return;
+        }
 
         currentHealth = Mathf.Max(0, currentHealth - damage);
+        Debug.Log($"BaseEnemy TakeDamage - After damage: currentHealth={currentHealth}");
+
         onDamageTaken?.Invoke();
 
         // Visual feedback
@@ -43,11 +54,12 @@ public abstract class BaseEnemy : MonoBehaviour
 
         if (currentHealth <= 0)
         {
+            Debug.Log("BaseEnemy TakeDamage - Health <= 0, calling Die()");
             Die();
         }
     }
 
-    private System.Collections.IEnumerator FlashRoutine()
+    protected System.Collections.IEnumerator FlashRoutine()
     {
         spriteRenderer.color = Color.red;
         yield return new WaitForSeconds(hitFlashDuration);

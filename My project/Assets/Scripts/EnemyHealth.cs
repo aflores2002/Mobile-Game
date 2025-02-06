@@ -16,7 +16,6 @@ public class EnemyHealth : MonoBehaviour
     {
         currentHealth -= damage;
 
-        // Play hurt animation if you have one
         // animator?.SetTrigger("Hurt");
 
         if (currentHealth <= 0)
@@ -27,13 +26,11 @@ public class EnemyHealth : MonoBehaviour
 
     private void Die()
     {
-        // Play death animation if you have one
         // animator?.SetTrigger("Death");
 
         // Disable enemy
         gameObject.SetActive(false);
 
-        // You might want to destroy the enemy after a delay
         // Destroy(gameObject, deathAnimationLength);
     }
 }

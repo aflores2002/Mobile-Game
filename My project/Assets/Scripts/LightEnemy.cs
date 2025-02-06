@@ -13,6 +13,17 @@ public class LightEnemy : BaseEnemy
         base.Start();
     }
 
+    void Awake()
+    {
+        // Add trigger collider
+        Collider2D collider = GetComponent<Collider2D>();
+        if (collider == null)
+        {
+            collider = gameObject.AddComponent<BoxCollider2D>();
+        }
+        collider.isTrigger = true;
+    }
+
     protected override void Die()
     {
         // Add any light enemy specific death behavior here
