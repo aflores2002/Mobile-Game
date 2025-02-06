@@ -5,22 +5,20 @@ public class CatKnightController : MonoBehaviour
 {
     [Header("Movement")]
     public float moveSpeed = 5f;
+    public float jumpForce = 12f;
 
     [Header("Combat")]
     public float attackCooldown = 0.5f;
+    private AttackManager attackManager;
 
     [Header("References")]
     public Animator animator;
     public SpriteRenderer spriteRenderer;
 
-    [Header("Ground Check")]
-    public LayerMask groundLayer;
-    public float groundCheckDistance = 0.1f;
-    private bool isGrounded;
-
     // Animation Parameters
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
     private static readonly int AttackHash = Animator.StringToHash("Attack");
+    private static readonly int JumpHash = Animator.StringToHash("Jump");
 
     // Private fields
     private Rigidbody2D rb;
@@ -28,11 +26,15 @@ public class CatKnightController : MonoBehaviour
     private float attackTimer;
     private float horizontalMovement;
     private bool isAttacking = false;
+    private float originalGravityScale;
 
     void Start()
     {
         Debug.Log("CatKnight: Start initialized");
         rb = GetComponent<Rigidbody2D>();
+
+        // Store original gravity scale
+        originalGravityScale = rb.gravityScale;
 
         // Ensure we have references
         if (animator == null)
@@ -47,14 +49,14 @@ public class CatKnightController : MonoBehaviour
         }
 
         // Setup rigidbody for platformer physics
-        rb.gravityScale = 3f;
+        rb.gravityScale = originalGravityScale;
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
-        // Verify animator parameters
-        foreach (AnimatorControllerParameter param in animator.parameters)
+        attackManager = GetComponent<AttackManager>();
+        if (attackManager == null)
         {
-            Debug.Log($"CatKnight: Found animator parameter: {param.name} of type {param.type}");
+            Debug.LogError("AttackManager component missing!");
         }
     }
 
@@ -62,13 +64,6 @@ public class CatKnightController : MonoBehaviour
     {
         // Get input from the horizontal joystick
         horizontalMovement = SimpleInput.GetAxis("Horizontal");
-
-        // Check if we're grounded
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, groundLayer);
-        isGrounded = hit.collider != null;
-
-        // Debug visualization of ground check
-        Debug.DrawRay(transform.position, Vector2.down * groundCheckDistance, isGrounded ? Color.green : Color.red);
 
         // Handle attack cooldown
         if (!canAttack)
@@ -98,10 +93,8 @@ public class CatKnightController : MonoBehaviour
         }
         else
         {
-            // When attacking, only stop horizontal movement
-            Vector2 newVelocity = rb.velocity;
-            newVelocity.x = 0;
-            rb.velocity = newVelocity;
+            // When attacking, freeze all movement
+            rb.velocity = Vector2.zero;
         }
     }
 
@@ -122,27 +115,76 @@ public class CatKnightController : MonoBehaviour
         }
     }
 
-    public void OnAttackInput()
+    public void OnJumpInput()
     {
-        Debug.Log("CatKnight: OnAttackInput called");
-        if (canAttack && !isAttacking)
+        Debug.Log("CatKnight: Jump input received");
+        if (!isAttacking)
         {
-            Debug.Log("CatKnight: Starting attack");
-            StartAttack();
+            StartJump();
         }
     }
 
-    private void StartAttack()
+    private void StartJump()
+    {
+        animator.SetTrigger(JumpHash);
+
+        // Apply jump force
+        rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+
+        Debug.Log($"CatKnight: Jump started with force {jumpForce}");
+    }
+
+    public void OnAttackInput()
+    {
+        Debug.Log("CatKnight: OnAttackInput called");
+        if (canAttack)
+        {
+            Debug.Log("CatKnight: Starting attack");
+            StartAttack(false);
+        }
+    }
+
+    public void OnPowerAttackInput()
+    {
+        Debug.Log("CatKnight: OnPowerAttackInput called");
+        if (canAttack)
+        {
+            Debug.Log("CatKnight: Starting power attack");
+            StartAttack(true);
+        }
+    }
+
+    [Header("Power Attack")]
+    public float powerAttackSlowdownFactor = 0.3f;
+
+    // Modify existing StartAttack to accept parameter
+    private void StartAttack(bool isPowerAttack = false)
     {
         canAttack = false;
         isAttacking = true;
-        Debug.Log("CatKnight: Setting Attack trigger");
+
+        // Reset any current animation states that might interfere
+        animator.ResetTrigger(JumpHash);
+        animator.ResetTrigger(AttackHash);
+
+        // Force immediate animation update
+        animator.Update(0f);
         animator.SetTrigger(AttackHash);
 
-        // When attacking, only stop horizontal movement
-        Vector2 newVelocity = rb.velocity;
-        newVelocity.x = 0;
-        rb.velocity = newVelocity;
+        // Execute the attack
+        if (isPowerAttack)
+        {
+            attackManager.ExecutePowerAttack();
+        }
+        else
+        {
+            attackManager.ExecuteNormalAttack();
+        }
+
+        // Freeze position and disable gravity while preserving facing direction
+        float currentXVelocity = rb.velocity.x;
+        rb.velocity = new Vector2(currentXVelocity * 0.5f, 0f); // Maintain some horizontal momentum
+        rb.gravityScale = 0f;
 
         // Add a safety timeout to reset attack state
         Invoke("ForceAttackReset", 1.0f);
@@ -152,6 +194,8 @@ public class CatKnightController : MonoBehaviour
     {
         Debug.Log("CatKnight: OnAttackComplete called");
         isAttacking = false;
+        // Restore gravity
+        rb.gravityScale = originalGravityScale;
         CancelInvoke("ForceAttackReset");
     }
 
@@ -163,6 +207,8 @@ public class CatKnightController : MonoBehaviour
             isAttacking = false;
             canAttack = true;
             attackTimer = 0;
+            // Restore gravity
+            rb.gravityScale = originalGravityScale;
         }
     }
 }
