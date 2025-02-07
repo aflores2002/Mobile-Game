@@ -7,6 +7,16 @@ public class CatKnightController : MonoBehaviour
     public float moveSpeed = 5f;
     public float jumpForce = 12f;
 
+    [Header("Ground Check")]
+    public LayerMask groundLayer;         // Assign ground layer in inspector
+    public float groundCheckDistance = 0.1f;
+    public Transform groundCheckPoint;     // Create an empty child object at feet position
+
+    [Header("Audio")]
+    public float footstepRate = 5f;     // Time between footstep sounds
+    private float lastFootstepTime;
+    private bool wasMoving;
+
     [Header("Combat")]
     public float attackCooldown = 0.5f;
     private AttackManager attackManager;
@@ -58,6 +68,22 @@ public class CatKnightController : MonoBehaviour
         {
             Debug.LogError("AttackManager component missing!");
         }
+
+        // Initialize audio timing
+        lastFootstepTime = 0f;
+        wasMoving = false;
+
+        // Create ground check point if not assigned
+        if (groundCheckPoint == null)
+        {
+            GameObject checkPoint = new GameObject("GroundCheck");
+            checkPoint.transform.parent = transform;
+            checkPoint.transform.localPosition = new Vector3(0, -0.5f, 0); // Adjust Y position based on your character's size
+            groundCheckPoint = checkPoint.transform;
+        }
+
+        // Log setup for debugging
+        Debug.Log("CatKnight: Audio system initialized");
     }
 
     void Update()
@@ -73,12 +99,70 @@ public class CatKnightController : MonoBehaviour
             {
                 canAttack = true;
                 attackTimer = 0;
-                Debug.Log("CatKnight: Attack cooldown reset, can attack again");
             }
         }
 
-        // Update animations
-        UpdateAnimations();
+        // Handle movement animations and sounds
+        if (!isAttacking)
+        {
+            float speed = Mathf.Abs(horizontalMovement);
+            animator.SetFloat(SpeedHash, speed);
+
+            // Footstep sound handling
+            if (speed > 0.1f)
+            {
+                if (Time.time >= lastFootstepTime + footstepRate)
+                {
+                    AudioManager.Instance.PlayPlayerFootstepSound();
+                    lastFootstepTime = Time.time;
+                }
+            }
+            else
+            {
+                // Stop footsteps when not moving
+                AudioManager.Instance.StopFootsteps();
+            }
+
+            // Update facing direction
+            if (horizontalMovement != 0)
+            {
+                spriteRenderer.flipX = horizontalMovement < 0;
+            }
+        }
+    }
+
+    void UpdateAnimationsAndSound()
+    {
+        if (!isAttacking)
+        {
+            // Calculate movement speed
+            float speed = Mathf.Abs(horizontalMovement);
+            animator.SetFloat(SpeedHash, speed);
+
+            // Handle footstep sounds
+            bool isGrounded = IsGrounded();
+
+            if (speed > 0.1f && isGrounded)
+            {
+                // Check if enough time has passed for next footstep
+                if (Time.time >= lastFootstepTime + footstepRate)
+                {
+                    AudioManager.Instance.PlayPlayerFootstepSound();
+                    lastFootstepTime = Time.time;
+                }
+                wasMoving = true;
+            }
+            else
+            {
+                wasMoving = false;
+            }
+
+            // Update facing direction
+            if (horizontalMovement != 0)
+            {
+                spriteRenderer.flipX = horizontalMovement < 0;
+            }
+        }
     }
 
     void FixedUpdate()
@@ -96,6 +180,32 @@ public class CatKnightController : MonoBehaviour
             // When attacking, freeze all movement
             rb.velocity = Vector2.zero;
         }
+    }
+
+    private bool IsGrounded()
+    {
+        if (groundCheckPoint == null)
+        {
+            Debug.LogWarning("Ground check point is missing!");
+            return false;
+        }
+
+        // Cast a small raycast line to check for ground
+        RaycastHit2D hit = Physics2D.Raycast(
+            groundCheckPoint.position,
+            Vector2.down,
+            groundCheckDistance,
+            groundLayer
+        );
+
+        // Visual debug
+        Debug.DrawRay(
+            groundCheckPoint.position,
+            Vector2.down * groundCheckDistance,
+            hit.collider != null ? Color.green : Color.red
+        );
+
+        return hit.collider != null;
     }
 
     void UpdateAnimations()
@@ -127,6 +237,9 @@ public class CatKnightController : MonoBehaviour
     private void StartJump()
     {
         animator.SetTrigger(JumpHash);
+
+        // Play jump sound
+        AudioManager.Instance.PlayPlayerJumpSound();
 
         // Apply jump force
         rb.velocity = new Vector2(rb.velocity.x, jumpForce);

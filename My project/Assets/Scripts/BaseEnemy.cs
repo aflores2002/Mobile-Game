@@ -46,6 +46,9 @@ public abstract class BaseEnemy : MonoBehaviour
 
         onDamageTaken?.Invoke();
 
+        // Play hit sound
+        AudioManager.Instance.PlayEnemyHitSound();
+
         // Visual feedback
         if (spriteRenderer != null)
         {

@@ -19,6 +19,9 @@ public class AttackManager : MonoBehaviour
 
     private void PerformAttack(int damage)
     {
+        // Play attack sound
+        AudioManager.Instance.PlayPlayerAttackSound(damage == powerAttackDamage);
+
         // Get the attack position based on the player's facing direction
         Vector2 attackPosition = transform.position;
         bool isFacingRight = !GetComponent<SpriteRenderer>().flipX;

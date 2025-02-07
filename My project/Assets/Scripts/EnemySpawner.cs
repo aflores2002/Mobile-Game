@@ -20,6 +20,9 @@ public class EnemySpawner : MonoBehaviour
     public float flyingHeight = 2f;
     public float flyingHeightVariation = 1f;
 
+    [Header("Kill Counter")]
+    private KillCounter killCounter;
+
     [Header("Prefabs")]
     public GameObject lightEnemyPrefab;
     public GameObject heavyEnemyPrefab;
@@ -34,6 +37,9 @@ public class EnemySpawner : MonoBehaviour
 
     void Start()
     {
+        // Find the kill counter
+        killCounter = FindObjectOfType<KillCounter>();
+
         if (waves == null || waves.Length == 0)
         {
             Debug.LogError("EnemySpawner: No waves configured!");
@@ -91,6 +97,16 @@ public class EnemySpawner : MonoBehaviour
 
         EnemyMovement movement = enemy.AddComponent<EnemyMovement>();
         movement.Initialize(!spawnOnRight, true, groundLayer, bounceHeight, bounceSpeed);
+
+        // Register with kill counter
+        if (killCounter != null)
+        {
+            BaseEnemy baseEnemy = enemy.GetComponent<BaseEnemy>();
+            if (baseEnemy != null)
+            {
+                killCounter.SubscribeToEnemy(baseEnemy);
+            }
+        }
     }
 
     void SpawnHeavyEnemy()
@@ -122,6 +138,15 @@ public class EnemySpawner : MonoBehaviour
 
         EnemyMovement movement = enemy.AddComponent<EnemyMovement>();
         movement.Initialize(!spawnOnRight, false, groundLayer, bounceHeight * 2f, bounceSpeed);
+    // Register with kill counter
+        if (killCounter != null)
+        {
+            BaseEnemy baseEnemy = enemy.GetComponent<BaseEnemy>();
+            if (baseEnemy != null)
+            {
+                killCounter.SubscribeToEnemy(baseEnemy);
+            }
+        }
     }
 }
 
